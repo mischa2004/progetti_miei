@@ -1,0 +1,72 @@
+{
+  "schema": {
+    "device_id": "STRING — identificativo univoco del sensore (es. AMB-001, MAC-014)",
+    "ambito": "STRING — uno tra: ambientale, macchinari, logistica, qualita",
+    "timestamp": "STRING ISO 8601 — es. 2026-06-08T09:30:00Z",
+    "tipo": "STRING — tipo di misura (vedi lista per ambito sotto)",
+    "valore": "FLOAT/INT — il valore numerico della misura",
+    "unita": "STRING — unità di misura (C, %, ppm, mm/s, rpm, kWh, pezzi, ...)",
+    "reparto": "STRING — reparto della fabbrica (Assemblaggio, Verniciatura, Stampaggio, Magazzino)",
+    "linea": "STRING — linea di produzione (L1, L2, L3, L4)"
+  },
+
+  "esempio_messaggio": {
+    "device_id": "MAC-014",
+    "ambito": "macchinari",
+    "timestamp": "2026-06-08T09:30:00Z",
+    "tipo": "temperatura_motore",
+    "valore": 78.4,
+    "unita": "C",
+    "reparto": "Assemblaggio",
+    "linea": "L2"
+  },
+
+  "misure_per_ambito": {
+    "ambientale": [
+      {"tipo": "temperatura",        "unita": "C",    "range": [15.0, 45.0]},
+      {"tipo": "umidita",            "unita": "%",    "range": [20.0, 95.0]},
+      {"tipo": "co2",                "unita": "ppm",  "range": [300, 2000]}
+    ],
+    "macchinari": [
+      {"tipo": "vibrazione",         "unita": "mm/s", "range": [0.5, 15.0]},
+      {"tipo": "rpm",                "unita": "rpm",  "range": [500, 5000]},
+      {"tipo": "consumo_energetico", "unita": "kWh",  "range": [1.0, 80.0]},
+      {"tipo": "temperatura_motore", "unita": "C",    "range": [40.0, 120.0]}
+    ],
+    "logistica": [
+      {"tipo": "posizione_gps_lat",  "unita": "deg",  "range": [45.0, 45.5]},
+      {"tipo": "posizione_gps_lon",  "unita": "deg",  "range": [9.0, 9.5]},
+      {"tipo": "lettura_rfid",       "unita": "code", "range": null}
+    ],
+    "qualita": [
+      {"tipo": "pezzi_prodotti",     "unita": "pezzi", "range": [0, 500]},
+      {"tipo": "scarti",             "unita": "pezzi", "range": [0, 50]},
+      {"tipo": "esito_controllo",    "unita": "bool",  "range": [0, 1]}
+    ]
+  },
+
+  "soglie_allarme": {
+    "temperatura":        {"operatore": ">", "soglia": 35.0},
+    "umidita":            {"operatore": ">", "soglia": 80.0},
+    "co2":                {"operatore": ">", "soglia": 1000},
+    "vibrazione":         {"operatore": ">", "soglia": 8.0},
+    "rpm":                {"operatore": ">", "soglia": 4000},
+    "consumo_energetico": {"operatore": ">", "soglia": 50.0},
+    "temperatura_motore": {"operatore": ">", "soglia": 85.0}
+  },
+
+  "topic_kafka": [
+    "ambientale",
+    "macchinari",
+    "logistica",
+    "qualita"
+  ],
+
+  "collections_mongodb": {
+    "database": "smart_factory",
+    "raw_telemetry":     "Studente A — dati grezzi, tutti i messaggi generati",
+    "processed_events":  "Studente B — messaggi validati e arricchiti",
+    "alerts":            "Studente B — solo misure che superano la soglia",
+    "aggregations":      "Studente B — medie/aggregati per finestra temporale"
+  }
+}
