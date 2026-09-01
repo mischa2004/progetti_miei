@@ -26,29 +26,31 @@ TOTALE_MESSAGGI = 1_000_000    # quanti messaggi generare
 BATCH_SIZE = 1_000             # ogni quanti messaggi fare il bulk insert su MongoDB
 
 # --- DEFINIZIONE DEI SENSORI PER AMBITO ---
-# Ogni ambito ha una lista di tipi di misura, con unità e range di valori realistici
+# Ogni ambito ha una lista di tipi di misura, con unità e range di valori realistici.
+# "intero": True marca le misure che per loro natura NON possono essere decimali
+# (conteggi di pezzi, giri al minuto, ppm, codici RFID, esiti 0/1).
 
 SENSORI = {
     "ambientale": [
         {"tipo": "temperatura",   "unita": "C",   "min": 15.0, "max": 45.0},
         {"tipo": "umidita",       "unita": "%",   "min": 20.0, "max": 95.0},
-        {"tipo": "co2",           "unita": "ppm", "min": 300,  "max": 2000},
+        {"tipo": "co2",           "unita": "ppm", "min": 300,  "max": 2000, "intero": True},
     ],
     "macchinari": [
         {"tipo": "vibrazione",         "unita": "mm/s", "min": 0.5,  "max": 15.0},
-        {"tipo": "rpm",                "unita": "rpm",  "min": 500,  "max": 5000},
+        {"tipo": "rpm",                "unita": "rpm",  "min": 500,  "max": 5000, "intero": True},
         {"tipo": "consumo_energetico", "unita": "kWh",  "min": 1.0,  "max": 80.0},
         {"tipo": "temperatura_motore", "unita": "C",    "min": 40.0, "max": 120.0},
     ],
     "logistica": [
         {"tipo": "posizione_gps_lat", "unita": "deg",  "min": 45.0, "max": 45.5},
         {"tipo": "posizione_gps_lon", "unita": "deg",  "min": 9.0,  "max": 9.5},
-        {"tipo": "lettura_rfid",      "unita": "code", "min": 1000, "max": 9999},
+        {"tipo": "lettura_rfid",      "unita": "code", "min": 1000, "max": 9999, "intero": True},
     ],
     "qualita": [
-        {"tipo": "pezzi_prodotti",  "unita": "pezzi", "min": 0,  "max": 500},
-        {"tipo": "scarti",          "unita": "pezzi", "min": 0,  "max": 50},
-        {"tipo": "esito_controllo", "unita": "bool",  "min": 0,  "max": 1},
+        {"tipo": "pezzi_prodotti",  "unita": "pezzi", "min": 0,  "max": 500, "intero": True},
+        {"tipo": "scarti",          "unita": "pezzi", "min": 0,  "max": 50,  "intero": True},
+        {"tipo": "esito_controllo", "unita": "bool",  "min": 0,  "max": 1,   "intero": True},
     ],
 }
 
@@ -87,8 +89,13 @@ def genera_messaggio(fake, ambito, timestamp_base):
     # Scegli un device_id casuale per questo ambito
     device_id = random.choice(DEVICE_IDS[ambito])
 
-    # Genera un valore casuale nel range del sensore
-    valore = round(random.uniform(sensore["min"], sensore["max"]), 2)
+    # Genera un valore casuale nel range del sensore.
+    # Le misure marcate "intero" usano randint: generarle come decimali darebbe
+    # valori privi di senso, tipo "esito_controllo: 0.47" o "pezzi_prodotti: 213.45".
+    if sensore.get("intero"):
+        valore = random.randint(int(sensore["min"]), int(sensore["max"]))
+    else:
+        valore = round(random.uniform(sensore["min"], sensore["max"]), 2)
 
     # Costruisci il messaggio
     messaggio = {

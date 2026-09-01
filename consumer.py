@@ -85,8 +85,11 @@ def main():
             
             # 1. Creiamo un formato temporale comodo "YYYY-MM-DD HH:MM" troncando i secondi
             try:
-                # Trasforma la stringa in oggetto datetime
-                dt = datetime.strptime(dato["timestamp"], "%Y-%m-%dT%H:%M:%S.%fZ")
+                # Togliamo la "Z" finale e lasciamo leggere la data a fromisoformat.
+                # Attenzione: il Producer scrive i millisecondi solo quando ci sono, quindi
+                # ogni tanto arriva un timestamp "tondo" tipo 2026-06-08T06:00:20Z.
+                # Un formato fisso con .%f fallirebbe proprio su quelli.
+                dt = datetime.fromisoformat(dato["timestamp"].removesuffix("Z"))
                 # Rimettiamo in stringa, ma togliamo secondi e millisecondi
                 dato["minuto_esatto"] = dt.strftime("%Y-%m-%d %H:%M:00")
             except Exception:
